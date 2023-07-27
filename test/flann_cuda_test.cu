@@ -97,9 +97,10 @@ class Flann_3D : public FLANNTestFixture {
   void SetUp() {
     printf("Reading test data...");
     fflush(stdout);
-    flann::load_from_file(data, "../data_dirs/cloud.h5", "dataset");
-    flann::load_from_file(query, "../data_dirs/cloud.h5", "query");
-    flann::load_from_file(match, "../data_dirs/cloud.h5", "match");
+    system("pwd");
+    flann::load_from_file(data, "data_dirs/cloud.h5", "dataset");
+    flann::load_from_file(query, "data_dirs/cloud.h5", "query");
+    flann::load_from_file(match, "data_dirs/cloud.h5", "match");
 
     dists = flann::Matrix<float>(new float[query.rows * 5], query.rows, 5);
     indices = flann::Matrix<int>(new int[query.rows * 5], query.rows, 5);
