@@ -28,7 +28,7 @@ if (HDF5_FOUND)
 endif()
 
 if (HDF5_FOUND AND BUILD_CUDA_LIB)
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-Xcompiler;-fPIC;-Xcudafe \"--diag_suppress=partial_override\" ;-gencode=arch=compute_52,code=\"sm_52,compute_52\";-gencode=arch=compute_61,code=\"sm_61,compute_61\"" )
+    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-Xcompiler;-fPIC;-lineinfo;-Xcudafe \"--diag_suppress=partial_override\" ;-gencode=arch=compute_70,code=\"sm_70,compute_70\";-gencode=arch=compute_61,code=\"sm_61,compute_61\"" )
     if (NVCC_COMPILER_BINDIR)
         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};--compiler-bindir=${NVCC_COMPILER_BINDIR}")
     endif()
