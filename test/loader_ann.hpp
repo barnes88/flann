@@ -38,12 +38,13 @@ class XVecsLoader : public Loader<ValueT> {
     this->num_elements = fsize / stride;
     this->hnd->seekg(0, std::ios::beg);
 
-    std::cout << "Open " << path << " with " << this->num_elements << " "
-              << this->dimension << "-dim vectors.";
+    std::cout << "Opened " << path << " with " << this->num_elements << " "
+              << this->dimension << "-dim vectors." << std::endl;
   }
 
   void load(ValueT* dst, size_t skip, size_t num) override {
-    std::cout << "Loading " << num << " vectors starting at " << skip << " ...";
+    std::cout << "Loading " << num << " vectors starting at " << skip << " ..."
+              << std::endl;
 
     size_t stride = 1 * sizeof(uint32_t) + this->dimension * sizeof(ValueT);
     this->hnd->seekg(stride * skip);
@@ -60,7 +61,7 @@ class XVecsLoader : public Loader<ValueT> {
       dst += this->dimension;
     }
 
-    std::cout << "Done";
+    std::cout << "Done Loading vector" << std::endl;
   }
 };
 

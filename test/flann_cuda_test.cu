@@ -18,13 +18,13 @@ using namespace flann;
 // get all test case names with --gtest_list_tests option from bash
 // run a specific test with --gtest_filter=<test_name>
 
-void load_fvecs_file(flann::Matrix<float>& dataset,
-                     const std::string& filename) {
-  XVecsLoader<float> query_loader(filename);
+template <typename T>
+void load_xvecs_file(flann::Matrix<T>& dataset, const std::string& filename) {
+  XVecsLoader<T> query_loader(filename);
   int32_t dim = query_loader.Dim();  // dimension of each vector
   int32_t num = query_loader.Num();  // Number of elements (vectors / rows)
 
-  dataset = flann::Matrix<float>(new float[dim * num], num, dim);
+  dataset = flann::Matrix<T>(new T[dim * num], num, dim);
   query_loader.load(dataset[0], 0, num);
 }
 
@@ -111,23 +111,42 @@ class Flann_sift10k : public FLANNTestFixture {
   flann::Matrix<int> match;
   flann::Matrix<float> dists;
   flann::Matrix<int> indices;
+  int K;
 
   void SetUp() {
-    printf("Reading test data...");
+    K = 100;
+    printf("Reading test data...\n");
     fflush(stdout);
-    load_fvecs_file(data,
-                    "/scratch/tgrogers-disk01/a/barnes88/private-accel-sim/"
-                    "gpu-app-collection/data_dirs/ggnn/siftsmall/query.fvecs");
+    load_xvecs_file<float>(
+        data,
+        "/scratch/tgrogers-disk01/a/barnes88/private-accel-sim/"
+        "gpu-app-collection/data_dirs/ggnn/siftsmall/base.fvecs");
+    load_xvecs_file<float>(
+        query,
+        "/scratch/tgrogers-disk01/a/barnes88/private-accel-sim/"
+        "gpu-app-collection/data_dirs/ggnn/siftsmall/query.fvecs");
+    load_xvecs_file<int>(
+        match,
+        "/scratch/tgrogers-disk01/a/barnes88/private-accel-sim/"
+        "gpu-app-collection/data_dirs/ggnn/siftsmall/gt.ivecs");
 
-    printf("done\n");
+    dists = flann::Matrix<float>(new float[query.rows * K], query.rows, K);
+    indices = flann::Matrix<int>(new int[query.rows * K], query.rows, K);
+
+    // printf("First element of query data:");
+    // for (int i = 0; i < 128; i++) {
+    //   printf("%f ", query[0][i]);
+    // }
+
+    printf("Done reading test data\n");
   }
 
   void TearDown() {
     delete[] data.ptr();
-    // delete[] query.ptr();
-    // delete[] match.ptr();
-    // delete[] dists.ptr();
-    // delete[] indices.ptr();
+    delete[] query.ptr();
+    delete[] match.ptr();
+    delete[] dists.ptr();
+    delete[] indices.ptr();
   }
 };
 
@@ -160,7 +179,21 @@ class Flann_3D : public FLANNTestFixture {
   }
 };
 
-TEST_F(Flann_sift10k, sift10k) { printf("running sift10k test\n"); }
+TEST_F(Flann_sift10k, sift10k) {
+  flann::Index<L2_Simple<float> > index(
+      data, flann::KDTreeSingleIndexParams(12, false));
+  start_timer("Building kd-tree index...");
+  index.buildIndex();
+  printf("done (%g seconds)\n", stop_timer());
+
+  start_timer("Searching KNN...");
+  index.knnSearch(query, indices, dists, K, flann::SearchParams(-1));
+  printf("done (%g seconds) K:%d\n", stop_timer(), K);
+
+  float precision = compute_precision(match, indices);
+  EXPECT_GE(precision, 0.99);
+  printf("Precision: %g\n", precision);
+}
 
 // This is a single K-D tree CPU implementation optimized for 3D datasets
 TEST_F(Flann_3D, KDTreeSingleTest) {
